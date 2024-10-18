@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -11,18 +11,36 @@ import ReactFlow, {
   Position,
   getBezierPath,
   EdgeText,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from "reactflow";
+import "reactflow/dist/style.css";
 
 // Custom node component
 function CustomNode({ data, isConnectable }) {
   return (
-    <div className="bg-white border-2 border-gray-300 rounded p-2 shadow-md">
+    <div className="bg-white border-2 border-gray-300 rounded p-2 shadow-md relative">
       <Handle
         type="target"
         position={Position.Top}
         isConnectable={isConnectable}
       />
+      <button
+        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-colors duration-200"
+        onClick={data.onNodeDelete}
+        title="Delete Node"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-3 w-3"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
       <input
         className="font-bold mb-2 w-full border border-gray-300 rounded px-2 py-1"
         value={data.label}
@@ -94,9 +112,9 @@ const CustomEdge = ({
         x={labelX}
         y={labelY}
         label={data.label}
-        labelStyle={{ fill: 'black', fontWeight: 700 }}
+        labelStyle={{ fill: "black", fontWeight: 700 }}
         labelShowBg
-        labelBgStyle={{ fill: 'white' }}
+        labelBgStyle={{ fill: "white" }}
         labelBgPadding={[2, 4]}
         labelBgBorderRadius={2}
       />
@@ -111,11 +129,14 @@ const edgeTypes = {
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [jsonResult, setJsonResult] = useState('{}');
+  const [jsonResult, setJsonResult] = useState("{}");
   const [nodeIdCounter, setNodeIdCounter] = useState(1);
   const [selectedEdges, setSelectedEdges] = useState([]);
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  );
 
   const updateJsonResult = useCallback(() => {
     const result = nodes.reduce((acc, node) => {
@@ -131,7 +152,7 @@ function App() {
       }, []);
 
       acc[node.data.label] = [
-        ...new Set([...connectedNodes, ...node.data.behaviors])
+        ...new Set([...connectedNodes, ...node.data.behaviors]),
       ];
       return acc;
     }, {});
@@ -142,65 +163,77 @@ function App() {
     updateJsonResult();
   }, [updateJsonResult]);
 
-  const onLabelChange = useCallback((nodeId, newLabel) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === nodeId) {
-          node.data = { ...node.data, label: newLabel };
-        }
-        return node;
-      })
-    );
-    updateJsonResult();
-  }, [setNodes, updateJsonResult]);
+  const onLabelChange = useCallback(
+    (nodeId, newLabel) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            node.data = { ...node.data, label: newLabel };
+          }
+          return node;
+        })
+      );
+      updateJsonResult();
+    },
+    [setNodes, updateJsonResult]
+  );
 
-  const onBehaviorChange = useCallback((nodeId, index, newBehavior) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === nodeId) {
-          const newBehaviors = [...node.data.behaviors];
-          newBehaviors[index] = newBehavior;
-          node.data = { ...node.data, behaviors: newBehaviors };
-        }
-        return node;
-      })
-    );
-    updateJsonResult();
-  }, [setNodes, updateJsonResult]);
+  const onBehaviorChange = useCallback(
+    (nodeId, index, newBehavior) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            const newBehaviors = [...node.data.behaviors];
+            newBehaviors[index] = newBehavior;
+            node.data = { ...node.data, behaviors: newBehaviors };
+          }
+          return node;
+        })
+      );
+      updateJsonResult();
+    },
+    [setNodes, updateJsonResult]
+  );
 
-  const onBehaviorDelete = useCallback((nodeId, index) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === nodeId) {
-          const newBehaviors = [...node.data.behaviors];
-          newBehaviors.splice(index, 1);
-          node.data = { ...node.data, behaviors: newBehaviors };
-        }
-        return node;
-      })
-    );
-    updateJsonResult();
-  }, [setNodes, updateJsonResult]);
+  const onBehaviorDelete = useCallback(
+    (nodeId, index) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            const newBehaviors = [...node.data.behaviors];
+            newBehaviors.splice(index, 1);
+            node.data = { ...node.data, behaviors: newBehaviors };
+          }
+          return node;
+        })
+      );
+      updateJsonResult();
+    },
+    [setNodes, updateJsonResult]
+  );
 
-  const onBehaviorAdd = useCallback((nodeId) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === nodeId) {
-          const newBehaviors = [...node.data.behaviors, ''];
-          node.data = { ...node.data, behaviors: newBehaviors };
-        }
-        return node;
-      })
-    );
-    updateJsonResult();
-  }, [setNodes, updateJsonResult]);
+  const onBehaviorAdd = useCallback(
+    (nodeId) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            const newBehaviors = [...node.data.behaviors, ""];
+            node.data = { ...node.data, behaviors: newBehaviors };
+          }
+          return node;
+        })
+      );
+      updateJsonResult();
+    },
+    [setNodes, updateJsonResult]
+  );
 
   const addNewNode = useCallback(() => {
     const newNode = {
       id: `${nodeIdCounter}`,
-      type: 'custom',
+      type: "custom",
       position: { x: Math.random() * 500, y: Math.random() * 500 },
-      data: { label: `Node ${nodeIdCounter}`, behaviors: [] }
+      data: { label: `Node ${nodeIdCounter}`, behaviors: [] },
     };
     setNodes((nds) => [...nds, newNode]);
     setNodeIdCounter((prevCounter) => prevCounter + 1);
@@ -213,7 +246,12 @@ function App() {
 
   const deleteSelectedEdges = useCallback(() => {
     if (selectedEdges.length > 0) {
-      setEdges((eds) => eds.filter((edge) => !selectedEdges.some((selectedEdge) => selectedEdge.id === edge.id)));
+      setEdges((eds) =>
+        eds.filter(
+          (edge) =>
+            !selectedEdges.some((selectedEdge) => selectedEdge.id === edge.id)
+        )
+      );
       setSelectedEdges([]);
       updateJsonResult();
     }
@@ -221,73 +259,94 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (event.key === "Delete" || event.key === "Backspace") {
         deleteSelectedEdges();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [deleteSelectedEdges]);
 
-  const updateGraphFromJson = useCallback((jsonString) => {
-    try {
-      const parsedJson = JSON.parse(jsonString);
-      const newNodes = [];
-      const newEdges = [];
-      let maxId = 0;
+  const updateGraphFromJson = useCallback(
+    (jsonString) => {
+      try {
+        const parsedJson = JSON.parse(jsonString);
+        const newNodes = [];
+        const newEdges = [];
+        let maxId = 0;
 
-      Object.entries(parsedJson).forEach(([nodeName, connections], index) => {
-        const nodeId = `${index + 1}`;
-        maxId = Math.max(maxId, parseInt(nodeId));
+        Object.entries(parsedJson).forEach(([nodeName, connections], index) => {
+          const nodeId = `${index + 1}`;
+          maxId = Math.max(maxId, parseInt(nodeId));
 
-        newNodes.push({
-          id: nodeId,
-          type: 'custom',
-          position: { x: Math.random() * 500, y: Math.random() * 500 },
-          data: { 
-            label: nodeName, 
-            behaviors: connections.filter(conn => !Object.keys(parsedJson).includes(conn))
-          }
+          newNodes.push({
+            id: nodeId,
+            type: "custom",
+            position: { x: Math.random() * 500, y: Math.random() * 500 },
+            data: {
+              label: nodeName,
+              behaviors: connections.filter(
+                (conn) => !Object.keys(parsedJson).includes(conn)
+              ),
+            },
+          });
         });
-      });
 
-      // Create edges after all nodes are created
-      Object.entries(parsedJson).forEach(([nodeName, connections], sourceIndex) => {
-        const sourceId = `${sourceIndex + 1}`;
-        connections.forEach(conn => {
-          if (Object.keys(parsedJson).includes(conn)) {
-            const targetIndex = Object.keys(parsedJson).indexOf(conn);
-            const targetId = `${targetIndex + 1}`;
-            // Only create edge if source index is less than target index
-            // This ensures we only create one edge between each pair of nodes
-            if (sourceIndex < targetIndex) {
-              newEdges.push({
-                id: `e${sourceId}-${targetId}`,
-                source: sourceId,
-                target: targetId
-              });
-            }
+        // Create edges after all nodes are created
+        Object.entries(parsedJson).forEach(
+          ([nodeName, connections], sourceIndex) => {
+            const sourceId = `${sourceIndex + 1}`;
+            connections.forEach((conn) => {
+              if (Object.keys(parsedJson).includes(conn)) {
+                const targetIndex = Object.keys(parsedJson).indexOf(conn);
+                const targetId = `${targetIndex + 1}`;
+                // Only create edge if source index is less than target index
+                // This ensures we only create one edge between each pair of nodes
+                if (sourceIndex < targetIndex) {
+                  newEdges.push({
+                    id: `e${sourceId}-${targetId}`,
+                    source: sourceId,
+                    target: targetId,
+                  });
+                }
+              }
+            });
           }
-        });
-      });
+        );
 
-      setNodes(newNodes);
-      setEdges(newEdges);
-      setNodeIdCounter(maxId + 1);
-    } catch (error) {
-      console.error('Invalid JSON:', error);
-    }
-  }, [setNodes, setEdges]);
+        setNodes(newNodes);
+        setEdges(newEdges);
+        setNodeIdCounter(maxId + 1);
+      } catch (error) {
+        console.error("Invalid JSON:", error);
+      }
+    },
+    [setNodes, setEdges]
+  );
 
-  const handleJsonChange = useCallback((event) => {
-    const newJsonString = event.target.value;
-    setJsonResult(newJsonString);
-    updateGraphFromJson(newJsonString);
-  }, [updateGraphFromJson]);
+  const handleJsonChange = useCallback(
+    (event) => {
+      const newJsonString = event.target.value;
+      setJsonResult(newJsonString);
+      updateGraphFromJson(newJsonString);
+    },
+    [updateGraphFromJson]
+  );
+
+  const onNodeDelete = useCallback(
+    (nodeId) => {
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) =>
+        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+      );
+      updateJsonResult();
+    },
+    [setNodes, setEdges, updateJsonResult]
+  );
 
   // Update node data with callback functions
   const nodesWithCallbacks = nodes.map((node) => ({
@@ -295,9 +354,11 @@ function App() {
     data: {
       ...node.data,
       onLabelChange: (newLabel) => onLabelChange(node.id, newLabel),
-      onBehaviorChange: (index, newBehavior) => onBehaviorChange(node.id, index, newBehavior),
+      onBehaviorChange: (index, newBehavior) =>
+        onBehaviorChange(node.id, index, newBehavior),
       onBehaviorDelete: (index) => onBehaviorDelete(node.id, index),
       onBehaviorAdd: () => onBehaviorAdd(node.id),
+      onNodeDelete: () => onNodeDelete(node.id),
     },
   }));
 
@@ -315,6 +376,7 @@ function App() {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           selectNodesOnDrag={false}
+          proOptions={{ hideAttribution: true }}
         >
           <Background />
           <Controls />
